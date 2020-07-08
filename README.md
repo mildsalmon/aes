@@ -19,3 +19,9 @@ If using the g++ compiler you can do:
 To run the encryption utility simply do **./encrypt** after compilation.   
 To run the decryption utility simply do **./decrypt** after compilation.
 
+from ceceww
+
+---
+
+공부하기 위해서 수정했음.
+Encryption과 Decryption은 하나의 파일로 합치고 작동이 안되는 부분은 수정해서 작동하게 만듬
