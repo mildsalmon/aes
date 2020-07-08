@@ -26,6 +26,7 @@ unsigned char s[256] =
 };
 
 // Encryption: Multiply by 2 for MixColumns
+// Encryption 2 for MixColumns : 데이터가 8비트 이상으로 넘어가면 0x11B를 XOR 해준다.
 unsigned char mul2[] =
 {
 	0x00,0x02,0x04,0x06,0x08,0x0a,0x0c,0x0e,0x10,0x12,0x14,0x16,0x18,0x1a,0x1c,0x1e,
@@ -47,6 +48,8 @@ unsigned char mul2[] =
 };
 
 // Encryption: Multiply by 3 for MixColumns
+// Encryption 3 for MixColumns : 데이터에 2를 곱해주고, 자기 자신을 XOR 해준다.
+//								데이터가 8비트 이상으로 넘어가면 0x11B를 XOR 해준다.
 unsigned char mul3[] =
 {
 	0x00,0x03,0x06,0x05,0x0c,0x0f,0x0a,0x09,0x18,0x1b,0x1e,0x1d,0x14,0x17,0x12,0x11,
@@ -193,8 +196,10 @@ unsigned char mul14[256] =
 };
 
 // Auxiliary function for KeyExpansion
+// KeyExpansion의 보조 기능
 void KeyExpansionCore(unsigned char * in, unsigned char i) {
 	// Rotate left by one byte: shift left 
+	// 한 바이트씩 왼쪽으로 회전: 왼쪽으로 이동
 	unsigned char t = in[0];
 	in[0] = in[1];
 	in[1] = in[2];
@@ -216,26 +221,40 @@ void KeyExpansionCore(unsigned char * in, unsigned char i) {
  * Total of 11 128-bit keys generated, including the original
  * Keys are stored one after the other in expandedKeys
  */
+/* 주요 KeyExpansion 함수
+ * 원본 키를 사용하여 추가 키 생성
+ * 생성된 총 11개의 128비트 키(원본을 포함)
+ * 키는 expansedKeys에 차례로 저장됨
+ */
 void KeyExpansion(unsigned char inputKey[16], unsigned char expandedKeys[176]) {
 	// The first 128 bits are the original key
+	// 처음 128비트는 원래 키다.
 	for (int i = 0; i < 16; i++) {
 		expandedKeys[i] = inputKey[i];
 	}
 
 	int bytesGenerated = 16; // Bytes we've generated so far
+							// 지금까지 생성한 바이트 수
 	int rconIteration = 1; // Keeps track of rcon value
+							// rcon 값 추적
 	unsigned char tmpCore[4]; // Temp storage for core
+								// 코어용 임시 저장소
 
 	while (bytesGenerated < 176) {
 		/* Read 4 bytes for the core
 		* They are the previously generated 4 bytes
 		* Initially, these will be the final 4 bytes of the original key
 		*/
+		/* 코어 4바이트 읽기
+		 * 이전에 생성된 4바이트
+		 * 초기에는 원본 키의 마지막 4바이트가 됨
+		 */
 		for (int i = 0; i < 4; i++) {
 			tmpCore[i] = expandedKeys[i + bytesGenerated - 4];
 		}
 
 		// Perform the core once for each 16 byte key
+		// 각 16바이트 키에 대해 코어 한 번 수행
 		if (bytesGenerated % 16 == 0) {
 			KeyExpansionCore(tmpCore, rconIteration++);
 		}
